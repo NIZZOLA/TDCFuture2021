@@ -119,14 +119,6 @@ app.MapGet("api/places/getbygeo", async (IPlaceRepository _placeRepository, doub
     return Results.Ok(response);
 });
 
-/*  - não aceita como get passar um objeto via Body 
- *  
-app.MapGet("api/places/getbygeo", async (IPlaceRepository _placeRepository, PlacesByGeoRequest placesRequest) =>
-{
-    var response = await _placeRepository.GetByLocation(placesRequest);
-    return Results.Ok(response);
-});
-*/
 app.MapGet("api/places/getbylocation", async (IPlaceRepository _placeRepository, int locationId, string type) =>
 {
     var response = await _placeRepository.GetByLocationId(locationId, type);
