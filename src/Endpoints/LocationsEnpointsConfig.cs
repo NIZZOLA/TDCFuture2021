@@ -10,67 +10,56 @@ namespace LocationMinApi.Endpoints
     {
         public static void AddEndpoints(WebApplication app)
         {
-            app.MapGet("api/places", async (IPlaceRepository _placeRepository) =>
+            app.MapGet("api/locations", async (ILocationRepository _locationRepository) =>
             {
-                var result = await _placeRepository.GetAll();
+                var result = await _locationRepository.GetAll();
                 if (result == null)
                     return Results.NotFound();
 
                 return Results.Ok(result);
             });
 
-            app.MapGet("api/places/{id}", async (IPlaceRepository _placeRepository, int? id) =>
+            app.MapGet("api/locations/{id}", async (ILocationRepository _locationRepository, int? id) =>
             {
                 if (!id.HasValue)
                     return Results.BadRequest();
 
-                var place = await _placeRepository.GetOne(id.Value);
+                var result = await _locationRepository.GetOne(id.Value);
+                if (result == null)
+                    return Results.NotFound();
 
-                return Results.Ok(place);
-            });
-
-            app.MapGet("api/places/hierarchy/{id}", async (IPlaceRepository _placeRepository, ILocationRepository _locationRepository, int? id) =>
-            {
-                if (!id.HasValue)
-                    return Results.BadRequest();
-
-                var response = new PlaceHierarchyResultModel();
-                response.Place = await _placeRepository.GetOne(id.Value);
-                response.Hierarchy = await _locationRepository.GetFromGeo(response.Place.Latitude, response.Place.Longitude);
-
-                return Results.Ok(response);
-            });
-
-            app.MapGet("api/places/getbygeo", async (IPlaceRepository _placeRepository, double latitude, double longitude, int meters, string type) =>
-            {
-                var response = await _placeRepository.GetByLocation(new PlacesByGeoRequest(latitude, longitude, meters, type));
-                return Results.Ok(response);
-            });
-
-            app.MapGet("api/places/getbylocation", async (IPlaceRepository _placeRepository, int locationId, string type) =>
-            {
-                var response = await _placeRepository.GetByLocationId(locationId, type);
-                return Results.Ok(response);
-            });
-
-            app.MapPost("api/places", async (IPlaceRepository _placeRepository, PlaceModel place) =>
-            {
-                if (place == null)
-                    return Results.BadRequest();
-
-                var response = await _placeRepository.Add(place);
-
-                return Results.CreatedAtRoute("GetPlaceModel", new { id = response.PlaceId }, response);
-            });
-
-            app.MapDelete("api/places/{id}", async (IPlaceRepository _placesRepository, int? id) =>
-            {
-                if (!id.HasValue)
-                    return Results.BadRequest();
-
-                var result = await _placesRepository.Delete(id.Value);
                 return Results.Ok(result);
             });
+
+            app.MapGet("api/locations/geo/{latitude}/{longitude}", async (ILocationRepository _locationRepository, double? latitude, double? longitude) =>
+            {
+                if (!latitude.HasValue || !longitude.HasValue)
+                    return Results.BadRequest();
+
+                var hierarchy = await _locationRepository.GetFromGeo(latitude.Value, longitude.Value);
+
+                return Results.Ok(hierarchy);
+            });
+
+            app.MapPost("api/locations", async (ILocationRepository _locationRepository, LocationModel location) =>
+            {
+                if (location == null)
+                    return Results.BadRequest();
+
+                var result = await _locationRepository.Add(location);
+
+                return Results.Ok(result);
+            });
+
+            app.MapDelete("api/locations", async (ILocationRepository _locationRepository, int? id) =>
+            {
+                if (!id.HasValue)
+                    return Results.BadRequest();
+
+                var result = await _locationRepository.Delete(id.Value);
+                return Results.Ok(result);
+            });
+
         }
     }
 }
